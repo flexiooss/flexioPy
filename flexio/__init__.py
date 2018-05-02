@@ -1,24 +1,26 @@
 import requests
 import json
 import pandas
-import numpy
+import sys
 
-flexioPaginationLength = 100
+flexioPaginationLength = 5
+
+dots = ['    ' ,'.   ', '..  ', '... ', ' .. ', '  . ', ' .. ', '... ', '..  ', '.   ']
 
 
 def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
     requestURL = flexioURL + '/' + account + '/' + resourceName
     rangeFrom = 0
     dataset = pandas.DataFrame()  # TODO Definir structure de donnees (dataframe ?)
-
-    dots = ['.   ', '..  ', '... ']
     doti = 0
 
+    sys.stdout.write("GET")
     while True:
         range = '{}-{}'.format(rangeFrom, rangeFrom + flexioPaginationLength-1)
-        print("Getting records {} from Flexio  {}".format(range, dots[doti]))
-        doti = 0 if (doti == 2) else doti + 1
-
+        sys.stdout.write("\rGetting records {} from Flexio  {}".format(range, dots[doti]))
+        sys.stdout.flush()
+        doti = 0 if (doti == len(dots)-1) else doti + 1
+        sys.stdout.flush()
         req = requests.get(requestURL, headers={'Authorization': auth, 'range': range})
         #TODO Gerer header
 
@@ -34,6 +36,9 @@ def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
         rangeFrom = rangeFrom + flexioPaginationLength
         if req.status_code == 200:
             break
+
+    sys.stdout.write("\r")
+    sys.stdout.flush()
 
     schema = get_resource_fields_types(
         flexioURL=flexioURL,
@@ -78,15 +83,14 @@ def get_resource_fields_types(flexioURL, account, resourceName, auth):
 
 def post_resource(flexioURL, account, resourceName, auth, data):
     requestURL = flexioURL + '/' + account + '/' + resourceName
-    dots = ['.   ', '..  ', '... ']
     doti = 0
-
-    print(data)
     records = []
     n = len(data)
+    sys.stdout.write("POST")
     for entry in range(n):
-        print("Posting record #{} to flexio {}".format(entry, dots[doti]))
-        doti = 0 if (doti == 2) else doti + 1
+        sys.stdout.write("\rPosting record #{} to flexio {}".format(entry, dots[doti]))
+        sys.stdout.flush()
+        doti = 0 if (doti == len(dots)-1) else doti + 1
         line = data.loc[[entry]]
         jason = line.to_json(orient='records')[1:-1]
         req = requests.post(url=requestURL, data=jason, headers={'Authorization': auth, 'Content-type': 'application/json'})
@@ -95,7 +99,8 @@ def post_resource(flexioURL, account, resourceName, auth, data):
             print(req.reason)
             return False
         records.append(req.headers.get('X-Entity-Id'))
-
+    sys.stdout.write("\r")
+    sys.stdout.flush()
     return records
 
 
