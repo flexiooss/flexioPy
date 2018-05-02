@@ -1,13 +1,11 @@
 from setuptools import setup
 
-setup(name='flexio',
+setup(name='flexiopy',
       version='0.0.1',
       description='Python library to manipulate Flexio API',
       url='https://github.com/flexiooss/flexioPy',
       author='ThibaudJeannin',
       author_email='stagiaire@flexio.fr',
       license='Apache2.0',
-      packages=['flexio'],
+      packages=['flexiopy'],
       zip_safe=False)
-
-
