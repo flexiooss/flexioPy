@@ -15,8 +15,6 @@ def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
     doti = 0
 
     while True:
-        # if verbose:
-        # TODO Print \r
         range = '{}-{}'.format(rangeFrom, rangeFrom + flexioPaginationLength-1)
         print("Getting records {} from Flexio  {}".format(range, dots[doti]))
         doti = 0 if (doti == 2) else doti + 1
@@ -25,9 +23,8 @@ def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
         #TODO Gerer header
 
         if req.status_code not in [200, 206]:
-            # TODO Print \r
-            print(req.text)
-            # TODO Trouver le bon champ de req
+            print(req.status_code)
+            print(req.reason)
             return None
 
         jason = str(req.text.replace('None', '"None"'))
@@ -37,8 +34,6 @@ def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
         rangeFrom = rangeFrom + flexioPaginationLength
         if req.status_code == 200:
             break
-        # if verbose:
-        # TODO Print \r
 
     schema = get_resource_fields_types(
         flexioURL=flexioURL,
@@ -61,8 +56,9 @@ def get_resource_schema(flexioURL, account, resourceName, auth):
     requestURL = flexioURL + '/' + account + '/' + resourceName + '/schema'
     req = requests.get(requestURL, headers={'Authorization': auth})
     if req.status_code not in [200]:
+        print(req.status_code)
+        print(req.reason)
         return None
-        #TODO Print error message
     return json.loads(req.text)
 
 
@@ -80,51 +76,89 @@ def get_resource_fields_types(flexioURL, account, resourceName, auth):
     return types
 
 
-def post_resource(flexioURL, account, resourceName, auth, data, verbose=False):
+def post_resource(flexioURL, account, resourceName, auth, data):
     requestURL = flexioURL + '/' + account + '/' + resourceName
     dots = ['.   ', '..  ', '... ']
     doti = 0
 
     print(data)
-
+    records = []
     n = len(data)
     for entry in range(n):
+        print("Posting record #{} to flexio {}".format(entry, dots[doti]))
+        doti = 0 if (doti == 2) else doti + 1
         line = data.loc[[entry]]
         jason = line.to_json(orient='records')[1:-1]
-        print(jason)
-        req = requests.post(url=requestURL, data=jason, headers={'Authorization': auth, 'Content-type':'application/json'})
+        req = requests.post(url=requestURL, data=jason, headers={'Authorization': auth, 'Content-type': 'application/json'})
         if req.status_code not in [201]:
-            print(req.text)
+            print(req.status_code)
+            print(req.reason)
             return False
+        records.append(req.headers.get('X-Entity-Id'))
 
-    return True
+    return records
 
 
-def get_record(flexioURL, account, resourceName, auth, recordID, fields=[], verbose=False):
+def get_record(flexioURL, account, resourceName, auth, recordID, fields=[]):
     requestURL = flexioURL + '/' + account + '/' + resourceName + '/' + recordID
 
     req = requests.get(url=requestURL, headers={'Authorization': auth})
     if req.status_code not in [200]:
+        print(req.status_code)
+        print(req.text)
         return None
-
-    print(req.text)
     jason = str(req.text)
-    record = pandas.read_json(jason, orient='records')
-    record = record.append(datasetnew, ignore_index=True)
+    record = pandas.read_json('['+jason+']', orient='records')
+
+    schema = get_resource_fields_types(
+        flexioURL=flexioURL,
+        account=account,
+        resourceName=resourceName,
+        auth=auth
+    )
+
+    # TODO Convertir les colonnes si besoin
+
+    record = record.filter(schema['names'])
+
+    if len(fields) != 0:
+        record = record.filter(fields)
     return record
 
 
+def put_record(flexioURL, account, resourceName, auth, recordID, data):
+    requestURL = flexioURL + '/' + account + '/' + resourceName + '/' + recordID
+    jason = data.to_json(orient='records')[1:-1]
+    req = requests.put(url=requestURL, data=jason, headers={'Authorization': auth, 'Content-type': 'application/json'})
+    if req.status_code not in [200]:
+        print(req.status_code)
+        print(req.reason)
+        return False
+    return True
 
-def putRecord(flexioURL, account, resourceName, auth, recordID, data, verbose=False):
-    print("#TODO")
+
+def patch_record(flexioURL, account, resourceName, auth, recordID, data, fields=[]):
+    requestURL = flexioURL + '/' + account + '/' + resourceName + '/' + recordID
+    if len(fields) != 0:
+        data = data.filter(fields)
+    jason = data.to_json(orient='records')[1:-1]
+    req = requests.patch(url=requestURL, data=jason, headers={'Authorization': auth, 'Content-type': 'application/json'})
+    if req.status_code not in [200]:
+        print(req.status_code)
+        print(req.reason)
+        return False
+    return True
 
 
-def patchRecord(flexioURL, account, resourceName, auth, recordID, data, fields=[], verbose=False):
-    print("#TODO")
+def delete_record(flexioURL, account, resourceName, recordID, auth):
+    requestURL = flexioURL + '/' + account + '/' + resourceName + '/' + recordID
 
-
-def deleteRecord(flexioURL, account, resourceName, recordID, auth, verbose=False):
-    print("#TODO")
+    req = requests.delete(url=requestURL, headers={'Authorization': auth})
+    if req.status_code not in [204]:
+        print(req.status_code)
+        print(req.reason)
+        return False
+    return True
 
 
 def castStringToNum():
