@@ -1,6 +1,6 @@
 all : wheel
 
-source_distribution :
+source_distribution : clean
 		python setup.py sdist
 
 wheel : source_distribution
@@ -14,3 +14,6 @@ install_local : wheel
 
 install_distant :
 		pip install flexiopy
+
+clean :
+		rm -rf build/ dist/ flexiopy.egg-info

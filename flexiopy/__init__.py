@@ -3,7 +3,7 @@ import json
 import pandas
 import sys
 
-flexioPaginationLength = 5
+flexioPaginationLength = 100
 
 dots = ['    ' ,'.   ', '..  ', '... ', ' .. ', '  . ', ' .. ', '... ', '..  ', '.   ']
 
