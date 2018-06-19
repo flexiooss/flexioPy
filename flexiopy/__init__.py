@@ -5,7 +5,7 @@ import sys
 
 flexioPaginationLength = 100
 
-dots = ['    ' ,'.   ', '..  ', '... ', ' .. ', '  . ', ' .. ', '... ', '..  ', '.   ']
+dots = ['.   ', '..  ', '... ']
 
 
 def get_resource(flexioURL, account, resourceName, auth, header="", fields=[]):
@@ -180,15 +180,15 @@ def castTIMEToTime():
 
 def setFieldNames():
     print("#TODO")
-
-
-def splitDataset():
-    print("#TODO")
-
-
-def cleanDataset():
-    print("#TODO")
-
+    
 
 def saveDatasetToFile():
     print("#TODO")
+
+#valueList : dict
+def returnValue(valueList):
+    jason = json.dumps(valueList)
+    file = open("jason.json", mode="w")
+    file.write(jason)
+    file.close()
+
