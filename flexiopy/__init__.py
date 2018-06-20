@@ -180,13 +180,13 @@ def castTIMEToTime():
 
 def setFieldNames():
     print("#TODO")
-    
+
 
 def saveDatasetToFile():
     print("#TODO")
 
 #valueList : dict
-def returnValue(valueList):
+def returnValues(valueList):
     jason = json.dumps(valueList)
     file = open("jason.json", mode="w")
     file.write(jason)
